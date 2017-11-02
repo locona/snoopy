@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/locona/snoopy/db"
+	"github.com/locona/snoopy/db/migrations"
+	"github.com/locona/snoopy/middleware"
 	"github.com/locona/snoopy/router"
 	"github.com/spf13/viper"
 )
@@ -32,10 +35,16 @@ func StartApiServer() {
 	api := gin.New()
 	api.Use(gin.Recovery())
 	api.Use(gin.Logger())
+	api.Use(middleware.Handle400())
 	api.HandleMethodNotAllowed = true
+
+	db.SetupDB()
+	db.DB.LogMode(true)
+	migrations.CreateSchema()
 	router.V1(api)
 	router.HealthCheck(api)
 	api.Run(":" + viper.GetString("port"))
+
 }
 
 func main() {
